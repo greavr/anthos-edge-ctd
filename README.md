@@ -23,3 +23,12 @@ terraform init
 terraform plan
 terraform apply
 ```
+
+
+# Org Policy:
+- **constraints/compute.vmCanIpForward** - Set To ***Not Enforces***
+- **compute.disableNestedVirtualization** - Se To ***Not Enforces***
+- **constraints/iam.disableServieAccountKeyCreation** - Set To ***Not Enforces***
+- **constraints/run.allowedIngress** - Set To ***All***
+- **constraints/run.allowedVPCEgress** - Set To ***All***
+- **iam.allowedPolicyMemberDomains** - Set To ***All***

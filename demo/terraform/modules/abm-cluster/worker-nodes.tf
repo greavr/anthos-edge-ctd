@@ -10,7 +10,7 @@ resource "google_compute_instance" "workers" {
     can_ip_forward = true
     allow_stopping_for_update = true
 
-    tags = ["abm","abm-worker"]
+    tags = ["abm","abm-worker","abm-${var.region}"]
 
     boot_disk {
         initialize_params {

@@ -10,7 +10,7 @@ resource "google_compute_instance" "masters" {
     can_ip_forward = true
     allow_stopping_for_update = true
 
-    tags = ["abm","abm-master"]
+    tags = ["abm","abm-master","abm-${var.region}"]
 
     boot_disk {
         initialize_params {
