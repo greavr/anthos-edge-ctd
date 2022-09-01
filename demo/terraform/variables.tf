@@ -81,7 +81,8 @@ variable "services_to_enable" {
         "storage.googleapis.com",
         "run.googleapis.com",
         "sourcerepo.googleapis.com",
-        "anthosconfigmanagement.googleapis.com"
+        "anthosconfigmanagement.googleapis.com",
+        "meshconfig.googleapis.com"
     ]
 }
 
@@ -103,7 +104,7 @@ variable "min-worker-node-count" {
 variable "gce-instance-type" {
   description = "GCE Instance Spec"
   type = string
-  default = "e2-standard-4"
+  default = "e2-standard-8"
 }
 
 # Instance OS

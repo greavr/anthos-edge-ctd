@@ -54,7 +54,8 @@ variable "abm-workstation-gce-roles" {
         "multiclusterservicediscovery.serviceAgent",
         "multiclusterservicediscovery.serviceAgent",
         "secretmanager.secretAccessor",
-        "editor"
+        "editor",
+        "iam.securityAdmin"
     ]
   
 }

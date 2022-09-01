@@ -27,3 +27,4 @@ variable "sa-key-list" {}
 variable "template-path" {}
 variable "vx-ip" {}
 variable "repo-url" {}
+variable "gcs_bucket" {}

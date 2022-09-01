@@ -28,9 +28,13 @@ echo "ubuntu    ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 echo 1 > /proc/sys/net/ipv4/ip_forward
 I=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/vx-ip" -H "Metadata-Flavor: Google")
 
-IPs=("10.0.0.2" "10.0.0.3" "10.0.0.4" "10.0.0.5" "10.0.0.6")
 ip link add vxlan0 type vxlan id 42 dev ens4 dstport 0
 current_ip=$(ip --json a show dev ens4 | jq '.[0].addr_info[0].local' -r)
+
+# This part needs fixing to be more dynamic
+subnet=$(echo $current_ip | cut -f1,2,3 -d'.')
+IPs=($subnet".2" $subnet".3" $subnet".4" $subnet".5" $subnet".6" $subnet".7" $subnet".8" $subnet".9" $subnet".10" $subnet".11" $subnet".12" $subnet".13" $subnet".14" $subnet".15" $subnet".16" $subnet".17" $subnet".18" $subnet".19" $subnet".20" $subnet".21" $subnet".22")
+
 echo "VM IP address is: $current_ip"
 for ip in ${IPs[@]}; do
     if [ "$ip" != "$current_ip" ]; then
@@ -40,3 +44,5 @@ done
 
 ip addr add 10.200.0.$I/24 dev vxlan0
 ip link set up dev vxlan0
+
+# Done & dusted

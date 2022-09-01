@@ -42,7 +42,7 @@ resource "google_compute_instance" "workstation" {
         enable_integrity_monitoring = true
     }
 
-    #metadata_startup_script = "${file("${path.module}/scripts/abm-workstation.sh")}"
+    metadata_startup_script = "${file("${path.module}/scripts/abm-workstation.sh")}"
 
     metadata = {
         master-node-ips = join(",",local.master-node-ips),
@@ -53,6 +53,7 @@ resource "google_compute_instance" "workstation" {
         template-path = var.template-path
         vx-ip = var.vx-ip
         repo-url = var.repo-url
+        gcs-bucket = "gs://${var.gcs_bucket}"
     }
 
     service_account {

@@ -96,6 +96,8 @@ module "nodes" {
     vx-ip = 2
     repo-url = module.anthos.source-repo
 
+    gcs_bucket = module.gcs.gcs_bucket_name
+
 
     depends_on = [
       module.gcs,

@@ -1,21 +1,29 @@
 #!/bin/bash
 set -x
+
+# Generate files
+mkdir /abm
+chmod 777 -R /abm
+cd /abm
+
 systemctl stop ufw
 ufw disable
-apt-get update
-apt-get remove docker docker-engine docker.io containerd runc
+
+apt-get update >> /abm/logs.log
+apt-get remove docker docker-engine docker.io containerd runc  >> /abm/logs.log
 apt-get install apt-transport-https \
   ca-certificates \
+  apt-utils \
   curl \
   gnupg-agent \
   software-properties-common \
   docker.io \
   ntpdate \
-  net-tools \
   jq \
   nano \
-  iputils-ping -y
+  iputils-ping -y >> /abm/logs.log
 
+sleep 10
 
 # Configure BMCTL
 gsutil cp gs://anthos-baremetal-release/bmctl/1.11.1/linux-amd64/bmctl .
@@ -40,15 +48,16 @@ WORKER_IPs=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/a
 MASTER_IPs=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/master-node-ips" -H "Metadata-Flavor: Google")
 IP_LIST="$WORKER_IPs,$MASTER_IPs"
 IFS=', ' read -r -a IPs <<< "$IP_LIST"
+
 for ip in ${IPs[@]}; do
-    echo $ip
+    echo $ip >> /abm/logs.log
 done
 
 
 
 ip link add vxlan0 type vxlan id 42 dev ens4 dstport 0
 current_ip=$(ip --json a show dev ens4 | jq '.[0].addr_info[0].local' -r)
-echo "VM IP address is: $current_ip"
+echo "VM IP address is: $current_ip"  >> /abm/logs.log
 for ip in ${IPs[@]}; do
     if [ "$ip" != "$current_ip" ]; then
         bridge fdb append to 00:00:00:00:00:00 dst $ip dev vxlan0
@@ -59,24 +68,18 @@ ip link set up dev vxlan0
 
 # Configure ssh key
 SECRET_SOURCE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/abm-private-key" -H "Metadata-Flavor: Google")
-echo $SECRET_SOURCE
-gcloud secrets versions access 2 --secret=$SECRET_SOURCE --format='get(payload.data)' | tr '_-' '/+' | base64 -d > ~/.ssh/id_rsa
+echo $SECRET_SOURCE  >> /abm/logs.log
+gcloud secrets versions access 1 --secret=$SECRET_SOURCE --format='get(payload.data)' | tr '_-' '/+' | base64 -d > ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 
 # Get Key Files
 SA_LIST=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/sa-key-list" -H "Metadata-Flavor: Google")
 IFS=', ' read -r -a array <<< "$SA_LIST"
 
-# Generate files
-mkdir /abm
-chmod 777 -R /abm
-cd /abm
-
-
 for i in "${array[@]}"
 do
-    echo "$i" >> log.log
-    gcloud secrets versions access 2 --secret=$i --format='get(payload.data)' | tr '_-' '/+' | base64 -d > $i.json
+    echo "$i" 
+    gcloud secrets versions access 1 --secret=$i --format='get(payload.data)' | tr '_-' '/+' | base64 -d > $i.json
 done
 
 # Setup cluster
@@ -84,14 +87,14 @@ export CLOUD_PROJECT_ID=$(gcloud config get-value project)
 
 ## Download & Create BMCTL Config
 REGION=$(echo $HOSTNAME | cut -f3,4 -d'-')
-bmctl create config -c abm-$REGION --project-id=$CLOUD_PROJECT_ID  >> log.log
+bmctl create config -c abm-$REGION --project-id=$CLOUD_PROJECT_ID   >> /abm/logs.log
 rm /abm/bmctl-workspace/abm-$REGION/abm-$REGION.yaml
-ABM_TEMPLATE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/template-path" -H "Metadata-Flavor: Google")  >> log.log
+ABM_TEMPLATE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/template-path" -H "Metadata-Flavor: Google")  
 
 # Replace with edge template
-echo $ABM_TEMPLATE >> log.log
-gsutil cp $ABM_TEMPLATE /abm/bmctl-workspace/abm-$REGION/abm-$REGION.yaml  >> log.log
-chmod 777 /abm/bmctl-workspace/abm-$REGION/*  >> log.log
+echo $ABM_TEMPLATE 
+gsutil cp $ABM_TEMPLATE /abm/bmctl-workspace/abm-$REGION/abm-$REGION.yaml  >> /abm/logs.log
+chmod 777 /abm/bmctl-workspace/abm-$REGION/*  
 
 ## Get & Set Values
 #### Project ID
@@ -116,25 +119,53 @@ done
 
 
 # Create cluster
-bmctl create cluster -c abm-$REGION >> log.log
+bmctl create cluster -c abm-$REGION  >> /abm/logs.log
 
 # Setup kubectl
-touch ~/.kube
-cp /abm/bmctl-workspace/abm-$REGION/abm-gce-kubeconfig ~/.kube/config
+mkdir ~/.kube
+cp /abm/bmctl-workspace/abm-$REGION/abm-$REGION-kubeconfig ~/.kube/config
 
+## Upload config to gcs
+GCS_BUCKET=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/gcs-bucket" -H "Metadata-Flavor: Google")  
 
-
+gsutil cp /abm/bmctl-workspace/abm-$REGION/abm-$REGION-kubeconfig $GCS_BUCKET/files/ >> /abm/logs.log
 
 # Setup Anthos Service Mesh
 curl https://storage.googleapis.com/csm-artifacts/asm/asmcli > asmcli
 chmod a+x asmcli
 mv asmcli /usr/local/sbin
 
-./asmcli install \
-  --project_id $CLOUD_PROJECT_ID \
-  --cluster_name abm-$REGION \
-  --cluster_location $REGION \
-  --fleet_id $CLOUD_PROJECT_ID  \
-  --output_dir asm \
+asmcli install \
+  --fleet_id $CLOUD_PROJECT_ID \
+  --kubeconfig ~/.kube/config \
+  --output_dir abm-asm \
+  --platform multicloud \
   --enable_all \
-  --ca mesh_ca
+  --ca mesh_ca  >> /abm/logs.log
+
+## Setup KSA
+cat <<EOF > /abm/cloud-console-reader.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cloud-console-reader
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "persistentvolumes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list", "watch"]
+EOF
+
+## Setup Auth Token and upload to GCS
+kubectl apply -f /abm/cloud-console-reader.yaml   >> /abm/logs.log
+KSA_NAME=abm-ksa
+REGION=$(echo $HOSTNAME | cut -f3,4 -d'-')
+kubectl  create serviceaccount ${KSA_NAME}  >> /abm/logs.log
+kubectl  create clusterrolebinding gcp-anthos-view --clusterrole view --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
+kubectl  create clusterrolebinding ${KSA_NAME}-view --clusterrole cloud-console-reader --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
+kubectl  create clusterrolebinding gcp-anthos-admin --clusterrole cluster-admin --serviceaccount default:${KSA_NAME}   >> /abm/logs.log
+SECRET_NAME=$(kubectl  get serviceaccount $KSA_NAME -o jsonpath='{$.secrets[0].name}')
+kubectl  get secret ${SECRET_NAME} -o jsonpath='{$.data.token}' | base64 --decode > /abm/abm-$REGION.token 
+gsutil cp /abm/abm-$REGION.token $GCS_BUCKET/files/
