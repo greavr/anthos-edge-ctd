@@ -169,3 +169,33 @@ kubectl  create clusterrolebinding gcp-anthos-admin --clusterrole cluster-admin 
 SECRET_NAME=$(kubectl  get serviceaccount $KSA_NAME -o jsonpath='{$.secrets[0].name}')
 kubectl  get secret ${SECRET_NAME} -o jsonpath='{$.data.token}' | base64 --decode > /abm/abm-$REGION.token 
 gsutil cp /abm/abm-$REGION.token $GCS_BUCKET/files/
+
+
+## Setup Fleet identity
+cat <<EOF > /abm/fleet-identity.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  namespace: config-management-system
+  name: my-cloudsdk-config
+data:
+  config: |
+    {
+      "type": "external_account",
+      "audience": "identitynamespace:xxproject_idxx.svc.id.goog:https://gkehub.googleapis.com/projects/xxproject_idxx/locations/global/memberships/abm-xxlocationxx",
+      "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/fleet-identity-sa@xxproject_idxx.iam.gserviceaccount.com:generateAccessToken",
+      "subject_token_type": "urn:ietf:params:oauth:token-type:jwt",
+      "token_url": "https://sts.googleapis.com/v1/token",
+      "credential_source": {
+        "file": "/var/run/secrets/tokens/gcp-ksa/token"
+      }
+    }
+EOF
+
+# Update values
+REGION=$(echo $HOSTNAME | cut -f3,4 -d'-')
+sed -i "s/xxlocationxx/$REGION/g" /abm/fleet-identity.yaml
+export CLOUD_PROJECT_ID=$(gcloud config get-value project)
+sed -i "s/xxproject\_idxx/$CLOUD_PROJECT_ID/g" /abm/fleet-identity.yaml
+
+kubectl apply -f /abm/fleet-identity.yaml

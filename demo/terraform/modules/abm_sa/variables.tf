@@ -31,13 +31,15 @@ variable "storage-sa" {
 
 variable "abm-node-gce-roles" {
     default = [
-        "logging.logWriter",
-        "monitoring.metricWriter",
-        "monitoring.dashboardEditor",
-        "stackdriver.resourceMetadata.writer",
-        "opsconfigmonitoring.resourceMetadata.writer",
-        "multiclusterservicediscovery.serviceAgent",
-        "multiclusterservicediscovery.serviceAgent"
+      "logging.logWriter",
+      "monitoring.metricWriter",
+      "monitoring.dashboardEditor",
+      "stackdriver.resourceMetadata.writer",
+      "opsconfigmonitoring.resourceMetadata.writer",
+      "multiclusterservicediscovery.serviceAgent",
+      "multiclusterservicediscovery.serviceAgent",
+      "source.reader",
+      "source.writer"
     ]
   
 }
@@ -58,4 +60,11 @@ variable "abm-workstation-gce-roles" {
         "iam.securityAdmin"
     ]
   
+}
+
+variable "fleet-identity-roles" {
+  default = [
+    "iam.workloadIdentityUser",
+    "source.reader"
+  ]
 }
