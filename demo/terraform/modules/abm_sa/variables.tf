@@ -39,7 +39,8 @@ variable "abm-node-gce-roles" {
       "multiclusterservicediscovery.serviceAgent",
       "multiclusterservicediscovery.serviceAgent",
       "source.reader",
-      "source.writer"
+      "source.writer",
+      "storage.objectViewer"
     ]
   
 }
