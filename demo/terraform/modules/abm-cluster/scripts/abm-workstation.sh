@@ -170,6 +170,11 @@ SECRET_NAME=$(kubectl  get serviceaccount $KSA_NAME -o jsonpath='{$.secrets[0].n
 kubectl  get secret ${SECRET_NAME} -o jsonpath='{$.data.token}' | base64 --decode > /abm/abm-$REGION.token 
 gsutil cp /abm/abm-$REGION.token $GCS_BUCKET/files/
 
+## Setup explict SA for metrics
+kubectl create namespace monitoring
+kubectl -n monitoring create secret generic gmp-test-sa \
+  --from-file=key.json=/abm/logging-sa-key.json
+
 
 ## Setup Fleet identity
 cat <<EOF > /abm/fleet-identity.yaml
