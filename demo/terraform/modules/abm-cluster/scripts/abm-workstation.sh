@@ -199,3 +199,8 @@ export CLOUD_PROJECT_ID=$(gcloud config get-value project)
 sed -i "s/xxproject\_idxx/$CLOUD_PROJECT_ID/g" /abm/fleet-identity.yaml
 
 kubectl apply -f /abm/fleet-identity.yaml
+
+
+# Enable VM Workloads
+bmctl enable vmruntime --kubeconfig ~/.kube/config
+bmctl install virtctl
