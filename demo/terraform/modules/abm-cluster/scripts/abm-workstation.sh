@@ -69,7 +69,7 @@ ip link set up dev vxlan0
 # Configure ssh key
 SECRET_SOURCE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/abm-private-key" -H "Metadata-Flavor: Google")
 echo $SECRET_SOURCE  >> /abm/logs.log
-gcloud secrets versions access 1 --secret=$SECRET_SOURCE --format='get(payload.data)' | tr '_-' '/+' | base64 -d > ~/.ssh/id_rsa
+gcloud secrets versions access latest --secret=$SECRET_SOURCE --format='get(payload.data)' | tr '_-' '/+' | base64 -d > ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 
 # Get Key Files
@@ -79,7 +79,7 @@ IFS=', ' read -r -a array <<< "$SA_LIST"
 for i in "${array[@]}"
 do
     echo "$i" 
-    gcloud secrets versions access 1 --secret=$i --format='get(payload.data)' | tr '_-' '/+' | base64 -d > $i.json
+    gcloud secrets versions access latest --secret=$i --format='get(payload.data)' | tr '_-' '/+' | base64 -d > $i.json
 done
 
 # Setup cluster

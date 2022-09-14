@@ -82,7 +82,8 @@ variable "services_to_enable" {
         "run.googleapis.com",
         "sourcerepo.googleapis.com",
         "anthosconfigmanagement.googleapis.com",
-        "meshconfig.googleapis.com"
+        "meshconfig.googleapis.com",
+        "secretmanager.googleapis.com"
     ]
 }
 

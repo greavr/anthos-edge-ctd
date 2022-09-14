@@ -12,6 +12,7 @@ variable "api-sa-roles" {
       "monitoring.dashboardEditor",
       "compute.instanceAdmin.v1",
       "gkehub.viewer",
-      "logging.viewer"
+      "logging.viewer",
+      "secretmanager.admin"
   ]
 }
