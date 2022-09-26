@@ -105,7 +105,7 @@ variable "min-worker-node-count" {
 variable "gce-instance-type" {
   description = "GCE Instance Spec"
   type = string
-  default = "e2-standard-8"
+  default = "n2-standard-8"
 }
 
 # Instance OS
