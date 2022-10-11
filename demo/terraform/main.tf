@@ -137,7 +137,7 @@ module "grafana" {
   region = var.regions[0].region
 
   depends_on = [
-    google_project_service.enable-services
+    module.nodes
   ]
 }
 
