@@ -20,8 +20,10 @@ resource "google_compute_instance" "workers" {
     }
 
     network_interface {
-        network = google_compute_network.demo-vpc.name
+        network = var.vpc-name
         subnetwork = google_compute_subnetwork.subnets.name
+        access_config { 
+        }
     }
 
     shielded_instance_config {
@@ -29,12 +31,12 @@ resource "google_compute_instance" "workers" {
         enable_integrity_monitoring = true
     }
 
-    metadata_startup_script = "${file("${path.module}/scripts/startup.sh")}"
-
     metadata = {
         ssh-keys = "ubuntu:${var.public-key}"
         vx-ip = var.vx-ip-worker + count.index
     }
+
+    metadata_startup_script  = "${file("${path.module}/scripts/startup.sh")}"
 
     service_account {
         # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.

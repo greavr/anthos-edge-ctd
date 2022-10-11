@@ -5,6 +5,7 @@
 resource "google_compute_instance_template" "grafana-template" {
     name        = "grafana-template"
     description = "This template is used to create Grafana Instance."
+    region = var.region
 
     tags = ["grafana"]
 
@@ -25,13 +26,15 @@ resource "google_compute_instance_template" "grafana-template" {
     }
 
     network_interface {
-        network = var.vpc-id
+        subnetwork = var.region
+        access_config { 
+        }
     }
 
     metadata_startup_script = "${file("${path.module}/scripts/startup.sh")}"
 
     service_account {
-        email  =  google_service_account.grafana-sa.email
+        email  =  google_service_account.grafana-gce-sa.email
         scopes = ["cloud-platform"]
     }
 
@@ -41,6 +44,6 @@ resource "google_compute_instance_template" "grafana-template" {
     }
 
     depends_on = [
-        google_service_account.grafana-sa
+        google_service_account.grafana-gce-sa
     ]
 }

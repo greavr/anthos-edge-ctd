@@ -124,18 +124,19 @@ bmctl create cluster -c abm-$REGION  >> /abm/logs.log
 # Setup kubectl
 mkdir ~/.kube
 cp /abm/bmctl-workspace/abm-$REGION/abm-$REGION-kubeconfig ~/.kube/config
+cp /abm/bmctl-workspace/abm-$REGION/abm-$REGION-kubeconfig /abm/abm-$REGION-kubeconfig
 
 ## Upload config to gcs
 GCS_BUCKET=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/gcs-bucket" -H "Metadata-Flavor: Google")  
 
-gsutil cp /abm/bmctl-workspace/abm-$REGION/abm-$REGION-kubeconfig $GCS_BUCKET/files/ >> /abm/logs.log
+gsutil cp /abm/abm-$REGION-kubeconfig $GCS_BUCKET/files/ >> /abm/logs.log
 
 # Setup Anthos Service Mesh
 curl https://storage.googleapis.com/csm-artifacts/asm/asmcli > asmcli
 chmod a+x asmcli
-mv asmcli /usr/local/sbin
+cp asmcli /usr/local/sbin
 
-asmcli install \
+./asmcli install \
   --fleet_id $CLOUD_PROJECT_ID \
   --kubeconfig ~/.kube/config \
   --output_dir abm-asm \
@@ -162,12 +163,12 @@ EOF
 kubectl apply -f /abm/cloud-console-reader.yaml   >> /abm/logs.log
 KSA_NAME=abm-ksa
 REGION=$(echo $HOSTNAME | cut -f3,4 -d'-')
-kubectl  create serviceaccount ${KSA_NAME}  >> /abm/logs.log
-kubectl  create clusterrolebinding gcp-anthos-view --clusterrole view --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
-kubectl  create clusterrolebinding ${KSA_NAME}-view --clusterrole cloud-console-reader --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
-kubectl  create clusterrolebinding gcp-anthos-admin --clusterrole cluster-admin --serviceaccount default:${KSA_NAME}   >> /abm/logs.log
+kubectl create serviceaccount ${KSA_NAME}  >> /abm/logs.log
+kubectl create clusterrolebinding gcp-anthos-view --clusterrole view --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
+kubectl create clusterrolebinding ${KSA_NAME}-view --clusterrole cloud-console-reader --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
+kubectl create clusterrolebinding gcp-anthos-admin --clusterrole cluster-admin --serviceaccount default:${KSA_NAME}   >> /abm/logs.log
 SECRET_NAME=$(kubectl  get serviceaccount $KSA_NAME -o jsonpath='{$.secrets[0].name}')
-kubectl  get secret ${SECRET_NAME} -o jsonpath='{$.data.token}' | base64 --decode > /abm/abm-$REGION.token 
+kubectl get secret ${SECRET_NAME} -o jsonpath='{$.data.token}' | base64 --decode > /abm/abm-$REGION.token 
 gsutil cp /abm/abm-$REGION.token $GCS_BUCKET/files/
 
 ## Setup explict SA for metrics
@@ -204,7 +205,6 @@ export CLOUD_PROJECT_ID=$(gcloud config get-value project)
 sed -i "s/xxproject\_idxx/$CLOUD_PROJECT_ID/g" /abm/fleet-identity.yaml
 
 kubectl apply -f /abm/fleet-identity.yaml
-
 
 # Enable VM Workloads
 bmctl enable vmruntime --kubeconfig ~/.kube/config

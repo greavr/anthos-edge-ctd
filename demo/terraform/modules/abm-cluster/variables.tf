@@ -1,5 +1,6 @@
 # VPC Setip
 variable "project_id" {}
+variable "vpc-name" {}
 
 variable "zone" {}
 variable "region" {}
@@ -8,8 +9,6 @@ variable "cidr" {}
 # Shared
 variable "node-os" {}
 variable "public-key" {}
-variable "firewall-ports-tcp" {}
-variable "firewall-ports-udp" {}
 
 # ABM Nodes
 variable "master-node-count" {}
@@ -28,3 +27,6 @@ variable "template-path" {}
 variable "vx-ip" {}
 variable "repo-url" {}
 variable "gcs_bucket" {}
+variable "workstation-spec" {
+  default = "e2-standard-4"
+}

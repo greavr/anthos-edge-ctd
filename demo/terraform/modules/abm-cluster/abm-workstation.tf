@@ -17,7 +17,7 @@ locals {
 resource "google_compute_instance" "workstation" {
     name  = "abm-workstation-${var.region}"
     hostname  = "abm-workstation-${var.region}.${var.project_id}"
-    machine_type = var.node-spec
+    machine_type = var.workstation-spec
     zone         = var.zone
     can_ip_forward = true
     allow_stopping_for_update = true
@@ -33,8 +33,10 @@ resource "google_compute_instance" "workstation" {
     }
 
     network_interface {
-        network = google_compute_network.demo-vpc.name
+        network = var.vpc-name
         subnetwork = google_compute_subnetwork.subnets.name
+        access_config { 
+        }
     }
 
     shielded_instance_config {

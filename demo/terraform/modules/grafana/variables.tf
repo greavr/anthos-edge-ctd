@@ -1,4 +1,5 @@
 variable "project_id" {}
+variable "region" {}
 variable "zone" {}
 variable "vpc-id" {}
 variable "node-os" {}

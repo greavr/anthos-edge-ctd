@@ -51,6 +51,23 @@ module "gcs" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# Create VPC
+# ----------------------------------------------------------------------------------------------------------------------
+module "vpc" {
+    source = "./modules/vpc"
+
+    project_id = var.project_id
+    region = var.regions[0].region
+    vpc-name = "abm"
+    firewall-ports-tcp = var.abm-firewall-ports-tcp
+    firewall-ports-udp = var.abm-firewall-ports-udp
+
+    depends_on = [
+        google_project_service.enable-services,
+    ]
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # Configure Anthos
 # ----------------------------------------------------------------------------------------------------------------------
 module "anthos" {
@@ -74,8 +91,7 @@ module "nodes" {
     region = "${each.value.region}"
     cidr = "${each.value.cidr}"
     zone = "${each.value.zone}"
-    firewall-ports-tcp = var.abm-firewall-ports-tcp
-    firewall-ports-udp = var.abm-firewall-ports-udp
+    vpc-name = module.vpc.vpc
     
     master-node-count = var.master-node-count
     min-worker-node-count = var.min-worker-node-count
@@ -102,9 +118,26 @@ module "nodes" {
     depends_on = [
       module.gcs,
       module.abm-sa,
-      module.ssh-key
+      module.ssh-key,
+      module.vpc
     ]
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Configure Grafana
+# ----------------------------------------------------------------------------------------------------------------------
+module "grafana" {
+  source = "./modules/grafana"
 
+  project_id = var.project_id
+  node-os = var.gce-instance-os
+
+  vpc-id = module.vpc.vpc
+  zone = var.regions[0].zone
+  region = var.regions[0].region
+
+  depends_on = [
+    google_project_service.enable-services
+  ]
+}
 

@@ -50,7 +50,127 @@ variable "regions" {
             region = "northamerica-northeast1"
             cidr = "10.0.8.0/24"
             zone = "northamerica-northeast1-a"
-        },]
+        },
+        {
+            region = "asia-east1"
+            cidr = "10.0.9.0/24"
+            zone = "asia-east1-a"
+        },
+        {
+            region = "asia-east2"
+            cidr = "10.0.10.0/24"
+            zone = "asia-east2-a"
+        },
+        {
+            region = "asia-northeast1"
+            cidr = "10.0.11.0/24"
+            zone = "asia-northeast1-a"
+        },
+        {
+            region = "asia-northeast2"
+            cidr = "10.0.12.0/24"
+            zone = "asia-northeast2-a"
+        },
+        {
+            region = "asia-northeast3"
+            cidr = "10.0.13.0/24"
+            zone = "asia-northeast3-a"
+        },
+        {
+            region = "asia-south1"
+            cidr = "10.0.14.0/24"
+            zone = "asia-south1-a"
+        },
+        {
+            region = "asia-south2"
+            cidr = "10.0.15.0/24"
+            zone = "asia-south2-a"
+        },
+        {
+            region = "asia-southeast1"
+            cidr = "10.0.16.0/24"
+            zone = "asia-southeast1-a"
+        },
+        {
+            region = "asia-southeast2"
+            cidr = "10.0.17.0/24"
+            zone = "asia-southeast2-a"
+        },
+        {
+            region = "australia-southeast1"
+            cidr = "10.0.18.0/24"
+            zone = "australia-southeast1-a"
+        },
+        {
+            region = "australia-southeast2"
+            cidr = "10.0.19.0/24"
+            zone = "australia-southeast2-a"
+        },
+        {
+            region = "europe-central2"
+            cidr = "10.0.20.0/24"
+            zone = "europe-central2-a"
+        },
+        {
+            region = "europe-north1"
+            cidr = "10.0.21.0/24"
+            zone = "europe-north1-a"
+        },
+        {
+            region = "europe-southwest1"
+            cidr = "10.0.22.0/24"
+            zone = "europe-southwest1-a"
+        },
+        {
+            region = "europe-west1"
+            cidr = "10.0.23.0/24"
+            zone = "europe-west1-b"
+        },
+        {
+            region = "europe-west2"
+            cidr = "10.0.24.0/24"
+            zone = "europe-west2-a"
+        },
+        {
+            region = "europe-west3"
+            cidr = "10.0.25.0/24"
+            zone = "europe-west3-a"
+        },
+        {
+            region = "europe-west4"
+            cidr = "10.0.26.0/24"
+            zone = "europe-west4-a"
+        },
+        {
+            region = "europe-west6"
+            cidr = "10.0.27.0/24"
+            zone = "europe-west6-a"
+        },
+        {
+            region = "europe-west8"
+            cidr = "10.0.28.0/24"
+            zone = "europe-west8-a"
+        },
+        {
+            region = "europe-west9"
+            cidr = "10.0.29.0/24"
+            zone = "europe-west9-a"
+        },
+        {
+            region = "northamerica-northeast2"
+            cidr = "10.0.30.0/24"
+            zone = "northamerica-northeast2-a"
+        },
+        {
+            region = "southamerica-east1"
+            cidr = "10.0.31.0/24"
+            zone = "southamerica-east1-a"
+        },
+        {
+            region = "southamerica-west1"
+            cidr = "10.0.32.0/24"
+            zone = "southamerica-west1-a"
+        }]
 }
 
 # Service to enable
