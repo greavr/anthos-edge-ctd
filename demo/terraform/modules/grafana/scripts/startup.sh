@@ -27,7 +27,8 @@ sed -i 's/\;cookie\_secure \= false/cookie\_secure \= true/g' /etc/grafana/grafa
 sed -i 's/\;cookie\_samesite \= lax/cookie\_samesite \= disabled/g' /etc/grafana/grafana.ini
 sed -i 's/\;allow\_embedding \= false/allow\_embedding \= true/g' /etc/grafana/grafana.ini
 sed -i 's/\;org\_name \= Main Org\./org\_name \= Main Org\./g' /etc/grafana/grafana.ini
-sed -i 's/\;org\_role \= Viewer/org\_role \= Viewer/g' /etc/grafana/grafana.ini
+sed -i 's/\;org\_role \= Viewer/org\_role \= Editor/g' /etc/grafana/grafana.ini
+sed -i 's/\;default\_theme \= dark/default\_theme \= light/g' /etc/grafana/grafana.ini
 sed -i '0,/\;enabled \= false/{s/\;enabled \= false/enabled \= true/}' /etc/grafana/grafana.ini
 
 systemctl restart grafana-server
