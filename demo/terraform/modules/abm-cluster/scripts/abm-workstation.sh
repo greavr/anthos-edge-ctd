@@ -9,8 +9,8 @@ cd /abm
 systemctl stop ufw
 ufw disable
 
-apt-get update >> /abm/logs.log
-apt-get remove docker docker-engine docker.io containerd runc  >> /abm/logs.log
+apt-get update 
+apt-get remove docker docker-engine docker.io containerd runc  
 apt-get install apt-transport-https \
   ca-certificates \
   apt-utils \
@@ -21,12 +21,12 @@ apt-get install apt-transport-https \
   ntpdate \
   jq \
   nano \
-  iputils-ping -y >> /abm/logs.log
+  iputils-ping -y 
 
 sleep 10
 
 # Configure BMCTL
-gsutil cp gs://anthos-baremetal-release/bmctl/1.11.1/linux-amd64/bmctl .
+gsutil cp gs://anthos-baremetal-release/bmctl/1.13.0/linux-amd64/bmctl .
 chmod +x bmctl
 mv bmctl /usr/local/bin/
 
@@ -50,14 +50,14 @@ IP_LIST="$WORKER_IPs,$MASTER_IPs"
 IFS=', ' read -r -a IPs <<< "$IP_LIST"
 
 for ip in ${IPs[@]}; do
-    echo $ip >> /abm/logs.log
+    echo $ip 
 done
 
 
 
 ip link add vxlan0 type vxlan id 42 dev ens4 dstport 0
 current_ip=$(ip --json a show dev ens4 | jq '.[0].addr_info[0].local' -r)
-echo "VM IP address is: $current_ip"  >> /abm/logs.log
+echo "VM IP address is: $current_ip"  
 for ip in ${IPs[@]}; do
     if [ "$ip" != "$current_ip" ]; then
         bridge fdb append to 00:00:00:00:00:00 dst $ip dev vxlan0
@@ -68,7 +68,7 @@ ip link set up dev vxlan0
 
 # Configure ssh key
 SECRET_SOURCE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/abm-private-key" -H "Metadata-Flavor: Google")
-echo $SECRET_SOURCE  >> /abm/logs.log
+echo $SECRET_SOURCE  
 gcloud secrets versions access latest --secret=$SECRET_SOURCE --format='get(payload.data)' | tr '_-' '/+' | base64 -d > ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 
@@ -87,13 +87,13 @@ export CLOUD_PROJECT_ID=$(gcloud config get-value project)
 
 ## Download & Create BMCTL Config
 REGION=$(echo $HOSTNAME | cut -f3,4 -d'-')
-bmctl create config -c abm-$REGION --project-id=$CLOUD_PROJECT_ID   >> /abm/logs.log
+bmctl create config -c abm-$REGION --project-id=$CLOUD_PROJECT_ID   
 rm /abm/bmctl-workspace/abm-$REGION/abm-$REGION.yaml
 ABM_TEMPLATE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/template-path" -H "Metadata-Flavor: Google")  
 
 # Replace with edge template
 echo $ABM_TEMPLATE 
-gsutil cp $ABM_TEMPLATE /abm/bmctl-workspace/abm-$REGION/abm-$REGION.yaml  >> /abm/logs.log
+gsutil cp $ABM_TEMPLATE /abm/bmctl-workspace/abm-$REGION/abm-$REGION.yaml  
 chmod 777 /abm/bmctl-workspace/abm-$REGION/*  
 
 ## Get & Set Values
@@ -119,7 +119,7 @@ done
 
 
 # Create cluster
-bmctl create cluster -c abm-$REGION  >> /abm/logs.log
+bmctl create cluster -c abm-$REGION  
 
 # Setup kubectl
 mkdir ~/.kube
@@ -129,7 +129,7 @@ cp /abm/bmctl-workspace/abm-$REGION/abm-$REGION-kubeconfig /abm/abm-$REGION-kube
 ## Upload config to gcs
 GCS_BUCKET=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/gcs-bucket" -H "Metadata-Flavor: Google")  
 
-gsutil cp /abm/abm-$REGION-kubeconfig $GCS_BUCKET/files/ >> /abm/logs.log
+gsutil cp /abm/abm-$REGION-kubeconfig $GCS_BUCKET/files/ 
 
 # Setup Anthos Service Mesh
 curl https://storage.googleapis.com/csm-artifacts/asm/asmcli > asmcli
@@ -142,7 +142,7 @@ cp asmcli /usr/local/sbin
   --output_dir abm-asm \
   --platform multicloud \
   --enable_all \
-  --ca mesh_ca  >> /abm/logs.log
+  --ca mesh_ca  
 
 ## Setup KSA
 cat <<EOF > /abm/cloud-console-reader.yaml
@@ -160,13 +160,13 @@ rules:
 EOF
 
 ## Setup Auth Token and upload to GCS
-kubectl apply -f /abm/cloud-console-reader.yaml   >> /abm/logs.log
+kubectl apply -f /abm/cloud-console-reader.yaml   
 KSA_NAME=abm-ksa
 REGION=$(echo $HOSTNAME | cut -f3,4 -d'-')
-kubectl create serviceaccount ${KSA_NAME}  >> /abm/logs.log
-kubectl create clusterrolebinding gcp-anthos-view --clusterrole view --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
-kubectl create clusterrolebinding ${KSA_NAME}-view --clusterrole cloud-console-reader --serviceaccount default:${KSA_NAME}  >> /abm/logs.log
-kubectl create clusterrolebinding gcp-anthos-admin --clusterrole cluster-admin --serviceaccount default:${KSA_NAME}   >> /abm/logs.log
+kubectl create serviceaccount ${KSA_NAME}  
+kubectl create clusterrolebinding gcp-anthos-view --clusterrole view --serviceaccount default:${KSA_NAME}  
+kubectl create clusterrolebinding ${KSA_NAME}-view --clusterrole cloud-console-reader --serviceaccount default:${KSA_NAME}  
+kubectl create clusterrolebinding gcp-anthos-admin --clusterrole cluster-admin --serviceaccount default:${KSA_NAME}   
 SECRET_NAME=$(kubectl  get serviceaccount $KSA_NAME -o jsonpath='{$.secrets[0].name}')
 kubectl get secret ${SECRET_NAME} -o jsonpath='{$.data.token}' | base64 --decode > /abm/abm-$REGION.token 
 gsutil cp /abm/abm-$REGION.token $GCS_BUCKET/files/

@@ -23,7 +23,6 @@ datasources:
 EOF
 
 ## Update Grafana Values
-sed -i 's/\;cookie\_secure \= false/cookie\_secure \= true/g' /etc/grafana/grafana.ini
 sed -i 's/\;cookie\_samesite \= lax/cookie\_samesite \= disabled/g' /etc/grafana/grafana.ini
 sed -i 's/\;allow\_embedding \= false/allow\_embedding \= true/g' /etc/grafana/grafana.ini
 sed -i 's/\;org\_name \= Main Org\./org\_name \= Main Org\./g' /etc/grafana/grafana.ini
